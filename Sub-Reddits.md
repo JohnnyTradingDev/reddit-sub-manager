@@ -1,4 +1,3 @@
-List of Crypto Related Sub-reddit 
 
 Sub
 Type of project 
@@ -356,7 +355,6 @@ Everything Crypto
 
 Not strict
 
-Crypto Asian Sub
 s/n
 Links
 Region 
@@ -380,6 +378,7 @@ Malaysia
 5
 https://www.reddit.com/r/MalaysianPF/
 Malaysia
+
 
 Best Sub for Karma Building
 Sub
@@ -662,5 +661,101 @@ https://www.reddit.com/r/memes/
 
 https://www.reddit.com/r/dankmemes/
 
+s/n
+Subredditt
+Forum specific
+Strategy
+1
+https://www.reddit.com/r/KenduInu_Ecosystem/
+memecoin
 
+Make a comment to support Kendu memecoin (Show your excitement and make bullish prediction for the token)
+Make a post indicating you bought the token and will support the army (coin as you like)
+2
+https://www.reddit.com/r/Slothana/
+memecoin
+Same as above
+3
+https://www.reddit.com/r/AskReddit/
+Question
+Search for new post and engage
+You can also ask questions in the sub
+4
+https://www.reddit.com/r/CasualConversation/
+Normal conersation
+Engage in causal converstaion
+5
+https://www.reddit.com/r/West_African_Food/
+Food`
+Submit pictures of your food 
+  
+6
+https://www.reddit.com/r/notinteresting/
+
+
+7
+https://www.reddit.com/r/educationalgifs/
+
+
+8
+
+https://www.reddit.com/r/explainlikeimfive/
+
+
+9
+https://www.reddit.com/r/todayilearned/
+
+
+10
+https://www.reddit.com/r/gifs/
+
+
+11
+https://www.reddit.com/r/InternetIsBeautiful/
+
+
+12
+https://www.reddit.com/r/mildlyinteresting/
+
+
+13
+https://www.reddit.com/r/aww/
+
+
+
+https://www.reddit.com/r/Aww_Espanol/
+
+
+
+https://www.reddit.com/r/funny/
+
+
+
+
+https://www.reddit.com/r/pics/
+
+
+
+https://www.reddit.com/r/sports/
+
+
+
+https://www.reddit.com/r/meme/
+
+
+
+https://www.reddit.com/r/dank_meme/
+
+
+
+
+https://www.reddit.com/r/MemeVideos/
+
+
+
+https://www.reddit.com/r/memes/
+
+
+
+https://www.reddit.com/r/dankmemes/
 

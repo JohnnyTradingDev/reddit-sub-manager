@@ -5,7 +5,7 @@ let state = {
     activeCat: 'all',
     searchQuery: '',
     sortBy: 'lastPosted',
-    viewMode: 'card', // card or table
+    viewMode: 'table', // table by default for compact view
     editSubId: null,
     editCatId: null,
     deleteTarget: null,
@@ -34,7 +34,7 @@ function $(id) { return document.getElementById(id); }
 
 function getSubName(url) {
     const match = url.match(/reddit\.com\/r\/([^\/]+)/);
-    return match ? 'r/' + match[1] : url;
+    return match ? match[1] : url;
 }
 
 function parseSubscribers(str) {
@@ -45,28 +45,12 @@ function parseSubscribers(str) {
     return num;
 }
 
-function formatDate(dateStr) {
-    if (!dateStr) return 'Chưa đăng';
+function isPostedRecent(dateStr) {
+    if (!dateStr) return false;
     const date = new Date(dateStr);
     const now = new Date();
     const diff = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-
-    if (diff === 0) return 'Hôm nay';
-    if (diff === 1) return 'Hôm qua';
-    if (diff < 7) return diff + ' ngày';
-    if (diff < 30) return Math.floor(diff / 7) + ' tuần';
-    return date.toLocaleDateString('vi-VN');
-}
-
-function getDateColorClass(dateStr) {
-    if (!dateStr) return 'red';
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diff = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-
-    if (diff <= 1) return 'green';
-    if (diff <= 7) return 'yellow';
-    return 'red';
+    return diff <= 7; // posted within 7 days
 }
 
 function getDaysAgo(days) {
@@ -117,6 +101,7 @@ function renderContent() {
         list = list.filter(s =>
             getSubName(s.url).toLowerCase().includes(q) ||
             (s.type || '').toLowerCase().includes(q) ||
+            (s.note || '').toLowerCase().includes(q) ||
             (s.nature || '').toLowerCase().includes(q)
         );
     }
@@ -141,7 +126,7 @@ function renderContent() {
             <div class="empty-state">
                 <div class="icon">📭</div>
                 <h3>Không tìm thấy</h3>
-                <p>Thử từ khóa khác hoặc thêm sub mới</p>
+                <p>Thử từ khóa khác</p>
             </div>
         `;
         return;
@@ -155,7 +140,7 @@ function renderContent() {
 function renderCards(list) {
     return list.map(sub => {
         const cat = state.categories.find(c => c.id === sub.category);
-        const dateClass = getDateColorClass(sub.lastPosted);
+        const posted = isPostedRecent(sub.lastPosted);
 
         return `
             <div class="sub-card">
@@ -164,7 +149,7 @@ function renderCards(list) {
                         <a href="${sub.url}" target="_blank">${getSubName(sub.url)}</a>
                     </div>
                     <div class="card-actions">
-                        ${sub.chatGPT ? `<a href="${sub.chatGPT}" target="_blank" style="width:30px;height:30px;background:var(--card-hover);border-radius:8px;display:flex;align-items:center;justify-content:center;text-decoration:none">💬</a>` : ''}
+                        ${sub.chatGPT ? `<a href="${sub.chatGPT}" target="_blank">💬</a>` : ''}
                         <button onclick="openEditSub(${sub.id})">✏️</button>
                         <button onclick="openDeleteSub(${sub.id})">🗑</button>
                     </div>
@@ -172,18 +157,18 @@ function renderCards(list) {
                 
                 <div class="card-tags">
                     ${sub.type ? `<span class="tag type">${sub.type}</span>` : ''}
-                    ${sub.subscribers ? `<span class="tag subs">👥 ${sub.subscribers}</span>` : ''}
+                    ${sub.subscribers ? `<span class="tag subs">${sub.subscribers}</span>` : ''}
                     ${cat ? `<span class="tag cat" style="background: ${cat.color}22; color: ${cat.color}">${cat.name}</span>` : ''}
                 </div>
                 
                 <div class="card-footer">
-                    <div class="card-date ${dateClass}">
-                        📅 ${formatDate(sub.lastPosted)}
+                    <div class="card-status ${posted ? 'posted' : 'not-posted'}" onclick="openQuickDate(${sub.id})" title="${sub.lastPosted || 'Chưa đăng'}">
+                        ${posted ? '✓' : '✗'}
                     </div>
-                    <button class="update-btn" onclick="openQuickDate(${sub.id})">Cập nhật</button>
+                    <button class="update-btn" onclick="openQuickDate(${sub.id})">Đánh dấu</button>
                 </div>
                 
-                ${sub.nature ? `<div class="card-note">📝 ${sub.nature}</div>` : ''}
+                ${sub.note || sub.nature ? `<div class="card-note">📝 ${sub.note || sub.nature}</div>` : ''}
             </div>
         `;
     }).join('');
@@ -195,8 +180,9 @@ function renderTable(list) {
             <table class="sub-table">
                 <thead>
                     <tr>
-                        <th>Subreddit</th>
+                        <th>Sub</th>
                         <th>Type</th>
+                        <th>Note</th>
                         <th>📅</th>
                         <th></th>
                     </tr>
@@ -205,15 +191,18 @@ function renderTable(list) {
     `;
 
     list.forEach(sub => {
-        const dateClass = getDateColorClass(sub.lastPosted);
+        const posted = isPostedRecent(sub.lastPosted);
+        const noteText = sub.note || sub.nature || '';
+
         html += `
             <tr>
                 <td>
-                    <a href="${sub.url}" target="_blank">${getSubName(sub.url).replace('r/', '')}</a>
+                    <a href="${sub.url}" target="_blank">${getSubName(sub.url)}</a>
                     ${sub.chatGPT ? ` <a href="${sub.chatGPT}" target="_blank">💬</a>` : ''}
                 </td>
                 <td>${sub.type || '-'}</td>
-                <td class="date-cell ${dateClass}" onclick="openQuickDate(${sub.id})">${formatDate(sub.lastPosted)}</td>
+                <td class="note-cell" title="${noteText}">${noteText || '-'}</td>
+                <td class="status ${posted ? 'posted' : 'not-posted'}" onclick="openQuickDate(${sub.id})" title="${sub.lastPosted || 'Chưa đăng'}">${posted ? '✓' : '✗'}</td>
                 <td class="actions">
                     <button onclick="openEditSub(${sub.id})">✏️</button>
                     <button onclick="openDeleteSub(${sub.id})">🗑</button>
@@ -254,7 +243,7 @@ function updateStats() {
 
 // ========== EVENT BINDINGS ==========
 function bindEvents() {
-    // Tabs
+    // Tabs click
     $('tabs').addEventListener('click', e => {
         const tab = e.target.closest('.tab');
         if (tab) {
@@ -278,7 +267,7 @@ function bindEvents() {
     // View toggle
     $('viewBtn').addEventListener('click', () => {
         state.viewMode = state.viewMode === 'card' ? 'table' : 'card';
-        $('viewBtn').textContent = state.viewMode === 'card' ? '☰' : '▦';
+        $('viewBtn').textContent = state.viewMode === 'card' ? '▦' : '☰';
         render();
     });
 
@@ -358,13 +347,8 @@ function bindEvents() {
 }
 
 // ========== MODAL FUNCTIONS ==========
+function closeMenu() { $('menuOverlay').classList.remove('active'); }
 
-// --- Menu ---
-function closeMenu() {
-    $('menuOverlay').classList.remove('active');
-}
-
-// --- Sub Modal ---
 function openAddSub() {
     state.editSubId = null;
     $('subModalTitle').textContent = '➕ Thêm Subreddit';
@@ -390,7 +374,7 @@ function openEditSub(id) {
     $('fCat').value = sub.category;
     $('fGpt').value = sub.chatGPT || '';
     $('fDate').value = sub.lastPosted || '';
-    $('fNote').value = sub.nature || '';
+    $('fNote').value = sub.note || sub.nature || '';
     $('subOverlay').classList.add('active');
 }
 
@@ -410,7 +394,8 @@ function handleSubSubmit(e) {
         category: $('fCat').value,
         chatGPT: $('fGpt').value,
         lastPosted: $('fDate').value,
-        nature: $('fNote').value
+        note: $('fNote').value,
+        nature: ''
     };
 
     if (state.editSubId) {
@@ -428,7 +413,6 @@ function handleSubSubmit(e) {
     render();
 }
 
-// --- Category Modal ---
 function openAddCat() {
     closeMenu();
     state.editCatId = null;
@@ -459,16 +443,11 @@ function closeCatModal() {
 function handleCatSubmit(e) {
     e.preventDefault();
 
-    const data = {
-        name: $('fCatName').value,
-        color: $('fCatColor').value
-    };
+    const data = { name: $('fCatName').value, color: $('fCatColor').value };
 
     if (state.editCatId) {
         const idx = state.categories.findIndex(c => c.id === state.editCatId);
-        if (idx >= 0) {
-            state.categories[idx] = { ...state.categories[idx], ...data };
-        }
+        if (idx >= 0) state.categories[idx] = { ...state.categories[idx], ...data };
     } else {
         const id = data.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
         state.categories.push({ id, ...data });
@@ -479,7 +458,6 @@ function handleCatSubmit(e) {
     render();
 }
 
-// --- Quick Date Sheet ---
 function openQuickDate(id) {
     const sub = state.subreddits.find(s => s.id === id);
     if (!sub) return;
@@ -504,13 +482,12 @@ function updateSubDate(id, date) {
     }
 }
 
-// --- Delete Modal ---
 function openDeleteSub(id) {
     const sub = state.subreddits.find(s => s.id === id);
     if (!sub) return;
 
     state.deleteTarget = { type: 'sub', id };
-    $('delMessage').textContent = `Bạn có chắc muốn xóa ${getSubName(sub.url)}?`;
+    $('delMessage').textContent = `Xóa ${getSubName(sub.url)}?`;
     $('delOverlay').classList.add('active');
 }
 
@@ -519,9 +496,8 @@ function openDeleteCat(id) {
     const cat = state.categories.find(c => c.id === id);
     if (!cat) return;
 
-    const count = state.subreddits.filter(s => s.category === id).length;
     state.deleteTarget = { type: 'cat', id };
-    $('delMessage').textContent = `Xóa category "${cat.name}"? (${count} subs sẽ chuyển sang category khác)`;
+    $('delMessage').textContent = `Xóa category "${cat.name}"?`;
     $('delOverlay').classList.add('active');
 }
 
@@ -536,19 +512,14 @@ function handleDelete() {
     if (state.deleteTarget.type === 'sub') {
         state.subreddits = state.subreddits.filter(s => s.id !== state.deleteTarget.id);
     } else {
-        // Move subs to first available category
         const defaultCat = state.categories.find(c => c.id !== state.deleteTarget.id);
         if (defaultCat) {
             state.subreddits.forEach(s => {
-                if (s.category === state.deleteTarget.id) {
-                    s.category = defaultCat.id;
-                }
+                if (s.category === state.deleteTarget.id) s.category = defaultCat.id;
             });
         }
         state.categories = state.categories.filter(c => c.id !== state.deleteTarget.id);
-        if (state.activeCat === state.deleteTarget.id) {
-            state.activeCat = 'all';
-        }
+        if (state.activeCat === state.deleteTarget.id) state.activeCat = 'all';
     }
 
     saveState();
@@ -556,43 +527,32 @@ function handleDelete() {
     render();
 }
 
-// ========== EXPORT & RESET ==========
 function exportData() {
     closeMenu();
-
-    let md = '# Reddit Sub Manager Export\n\n';
-    md += `Exported: ${new Date().toLocaleString('vi-VN')}\n\n`;
+    let md = '# Reddit Subs Export\n\n';
 
     state.categories.forEach(cat => {
         const subs = state.subreddits.filter(s => s.category === cat.id);
-        if (subs.length === 0) return;
+        if (!subs.length) return;
 
-        md += `## ${cat.name}\n\n`;
-        md += '| Sub | Type | Subs | Last Posted | ChatGPT |\n';
-        md += '|-----|------|------|-------------|----------|\n';
-
+        md += `## ${cat.name}\n| Sub | Type | Note | Posted |\n|-----|------|------|--------|\n`;
         subs.forEach(s => {
-            const gpt = s.chatGPT ? `[Link](${s.chatGPT})` : '-';
-            md += `| [${getSubName(s.url)}](${s.url}) | ${s.type || '-'} | ${s.subscribers || '-'} | ${s.lastPosted || '-'} | ${gpt} |\n`;
+            const posted = isPostedRecent(s.lastPosted) ? '✓' : '✗';
+            md += `| [${getSubName(s.url)}](${s.url}) | ${s.type || '-'} | ${s.note || s.nature || '-'} | ${posted} |\n`;
         });
-
         md += '\n';
     });
 
-    const blob = new Blob([md], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
-    a.download = `reddit-subs-${new Date().toISOString().split('T')[0]}.md`;
+    a.href = URL.createObjectURL(new Blob([md]));
+    a.download = `subs-${new Date().toISOString().split('T')[0]}.md`;
     a.click();
-    URL.revokeObjectURL(url);
 }
 
 function resetData() {
     closeMenu();
-    if (confirm('⚠️ Reset tất cả data về mặc định?\n\nDữ liệu hiện tại sẽ bị xóa!')) {
-        localStorage.removeItem('reddit_categories');
-        localStorage.removeItem('reddit_subreddits');
+    if (confirm('Reset all data?')) {
+        localStorage.clear();
         location.reload();
     }
 }
