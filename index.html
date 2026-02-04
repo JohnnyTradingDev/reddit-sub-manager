@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Reddit Subs</title>
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -14,139 +13,195 @@
     <div class="app">
         <!-- Header -->
         <header class="header">
-            <div class="logo">📋 <span>Reddit Subs</span></div>
-            <div class="header-btns">
-                <button id="viewToggle" class="h-btn">☰</button>
-                <button id="addBtn" class="h-btn primary">+</button>
-                <button id="menuBtn" class="h-btn">⋮</button>
+            <div class="brand">
+                <span class="icon">📚</span>
+                <span class="title">Reddit Tracker</span>
+            </div>
+            <div class="header-actions">
+                <button class="btn-icon" id="viewBtn" title="Đổi view">☰</button>
+                <button class="btn-icon primary" id="addBtn" title="Thêm">＋</button>
+                <button class="btn-icon" id="menuBtn" title="Menu">⋮</button>
             </div>
         </header>
 
-        <!-- Category Tabs -->
-        <div class="tabs" id="tabs"></div>
+        <!-- Filter Tabs -->
+        <div class="filter-bar">
+            <div class="tabs-scroll" id="tabs"></div>
+        </div>
 
         <!-- Search -->
-        <div class="search-row">
-            <input type="text" id="search" placeholder="🔍 Tìm...">
-            <select id="sort">
-                <option value="lastPosted">📅 Ngày</option>
-                <option value="name">🔤 Tên</option>
-                <option value="subscribers">👥 Sub</option>
+        <div class="search-bar">
+            <div class="search-input">
+                <span>🔍</span>
+                <input type="text" id="searchInput" placeholder="Tìm subreddit...">
+            </div>
+            <select id="sortSelect">
+                <option value="lastPosted">📅 Ngày đăng</option>
+                <option value="name">🔤 Tên A-Z</option>
+                <option value="subscribers">👥 Subscribers</option>
             </select>
         </div>
 
-        <!-- Content -->
-        <div class="content" id="content"></div>
+        <!-- Stats -->
+        <div class="stats">
+            <span><b id="totalCount">0</b> subs</span>
+            <span id="viewLabel">Card view</span>
+        </div>
 
-        <!-- Bottom Nav -->
+        <!-- Main Content -->
+        <main class="main" id="mainContent"></main>
+
+        <!-- Bottom Navigation -->
         <nav class="bottom-nav">
-            <button class="nav-btn active" data-cat="all">🏠</button>
-            <button class="nav-btn" data-cat="crypto">💰</button>
-            <button class="nav-btn" data-cat="karma">⭐</button>
-            <button class="nav-btn" data-cat="zero-karma">🚀</button>
+            <button class="nav-item active" data-cat="all">
+                <span>🏠</span>
+                <small>Tất cả</small>
+            </button>
+            <button class="nav-item" data-cat="crypto">
+                <span>💰</span>
+                <small>Crypto</small>
+            </button>
+            <button class="nav-item" data-cat="karma">
+                <span>⭐</span>
+                <small>Karma</small>
+            </button>
+            <button class="nav-item" data-cat="zero-karma">
+                <span>🚀</span>
+                <small>Fast</small>
+            </button>
         </nav>
+    </div>
 
-        <!-- Menu Overlay -->
-        <div class="overlay" id="menuOverlay">
-            <div class="menu">
-                <div class="menu-header">
-                    <h3>Menu</h3>
-                    <button id="closeMenu">✕</button>
-                </div>
-                <div class="menu-items">
-                    <button onclick="openCategoryModal()">➕ Thêm Category</button>
-                    <button onclick="exportData()">📥 Export</button>
-                    <button onclick="resetData()">🔄 Reset</button>
-                </div>
-                <div class="menu-cats" id="menuCats"></div>
+    <!-- SIDE MENU -->
+    <div class="overlay" id="menuOverlay">
+        <div class="side-menu">
+            <div class="menu-head">
+                <h3>⚙️ Menu</h3>
+                <button class="close-btn" id="closeMenuBtn">✕</button>
+            </div>
+            <ul class="menu-list">
+                <li id="addCatBtn">➕ Thêm Category</li>
+                <li id="exportBtn">📥 Export Markdown</li>
+                <li id="resetBtn">🔄 Reset Data</li>
+            </ul>
+            <div class="menu-section">
+                <h4>Categories</h4>
+                <ul id="catList"></ul>
             </div>
         </div>
+    </div>
 
-        <!-- Sub Modal -->
-        <div class="overlay" id="subOverlay">
-            <div class="modal">
-                <div class="modal-header">
-                    <h3 id="subTitle">Thêm Sub</h3>
-                    <button id="closeSub">✕</button>
+    <!-- ADD/EDIT SUB MODAL -->
+    <div class="overlay" id="subOverlay">
+        <div class="modal">
+            <div class="modal-head">
+                <h3 id="subModalTitle">➕ Thêm Subreddit</h3>
+                <button class="close-btn" id="closeSubBtn">✕</button>
+            </div>
+            <form id="subForm" class="modal-body">
+                <div class="field">
+                    <label>URL Subreddit</label>
+                    <input type="url" id="fUrl" placeholder="https://reddit.com/r/..." required>
                 </div>
-                <form id="subForm">
-                    <input type="url" id="subUrl" placeholder="URL reddit.com/r/..." required>
-                    <div class="row">
-                        <input type="text" id="subType" placeholder="Loại">
-                        <input type="text" id="subSubs" placeholder="Subscribers">
+                <div class="field-row">
+                    <div class="field">
+                        <label>Loại</label>
+                        <input type="text" id="fType" placeholder="BTC, Meme...">
                     </div>
-                    <select id="subCat" required></select>
-                    <input type="url" id="subGPT" placeholder="ChatGPT link">
-                    <div class="date-row">
-                        <input type="date" id="subDate">
-                        <div class="quick-dates">
-                            <button type="button" data-d="0">Nay</button>
-                            <button type="button" data-d="1">Qua</button>
-                            <button type="button" data-d="7">7d</button>
-                        </div>
+                    <div class="field">
+                        <label>Subscribers</label>
+                        <input type="text" id="fSubs" placeholder="1M, 500k...">
                     </div>
-                    <input type="text" id="subNature" placeholder="Ghi chú / Rules">
-                    <div class="modal-btns">
-                        <button type="button" id="cancelSub">Hủy</button>
-                        <button type="submit" class="primary">Lưu</button>
+                </div>
+                <div class="field">
+                    <label>Category</label>
+                    <select id="fCat" required></select>
+                </div>
+                <div class="field">
+                    <label>💬 ChatGPT Link</label>
+                    <input type="url" id="fGpt" placeholder="https://chatgpt.com/c/...">
+                </div>
+                <div class="field">
+                    <label>📅 Ngày đăng gần nhất</label>
+                    <input type="date" id="fDate">
+                    <div class="quick-btns">
+                        <button type="button" class="quick-btn" data-days="0">Hôm nay</button>
+                        <button type="button" class="quick-btn" data-days="1">Hôm qua</button>
+                        <button type="button" class="quick-btn" data-days="7">1 tuần</button>
                     </div>
-                </form>
+                </div>
+                <div class="field">
+                    <label>Ghi chú / Rules</label>
+                    <input type="text" id="fNote" placeholder="Strict, Not strict...">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn secondary" id="cancelSubBtn">Hủy</button>
+                    <button type="submit" class="btn primary">💾 Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ADD/EDIT CATEGORY MODAL -->
+    <div class="overlay" id="catOverlay">
+        <div class="modal small">
+            <div class="modal-head">
+                <h3 id="catModalTitle">➕ Thêm Category</h3>
+                <button class="close-btn" id="closeCatBtn">✕</button>
+            </div>
+            <form id="catForm" class="modal-body">
+                <div class="field">
+                    <label>Tên Category</label>
+                    <input type="text" id="fCatName" placeholder="Gaming, Finance..." required>
+                </div>
+                <div class="field">
+                    <label>Màu sắc</label>
+                    <input type="color" id="fCatColor" value="#6366f1">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn secondary" id="cancelCatBtn">Hủy</button>
+                    <button type="submit" class="btn primary">💾 Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- QUICK DATE PICKER -->
+    <div class="overlay" id="dateOverlay">
+        <div class="bottom-sheet">
+            <div class="sheet-head">
+                <h3>📅 Cập nhật ngày đăng</h3>
+                <button class="close-btn" id="closeDateBtn">✕</button>
+            </div>
+            <p class="sheet-sub" id="dateSubName"></p>
+            <div class="date-options">
+                <button class="date-opt" data-days="0">Hôm nay</button>
+                <button class="date-opt" data-days="1">Hôm qua</button>
+                <button class="date-opt" data-days="2">2 ngày</button>
+                <button class="date-opt" data-days="3">3 ngày</button>
+                <button class="date-opt" data-days="7">1 tuần</button>
+                <button class="date-opt" data-days="14">2 tuần</button>
+            </div>
+            <div class="custom-date">
+                <input type="date" id="customDateInput">
+                <button class="btn primary" id="applyDateBtn">Áp dụng</button>
             </div>
         </div>
+    </div>
 
-        <!-- Category Modal -->
-        <div class="overlay" id="catOverlay">
-            <div class="modal small">
-                <div class="modal-header">
-                    <h3 id="catTitle">Thêm Category</h3>
-                    <button id="closeCat">✕</button>
-                </div>
-                <form id="catForm">
-                    <input type="text" id="catName" placeholder="Tên" required>
-                    <input type="color" id="catColor" value="#6366f1">
-                    <div class="modal-btns">
-                        <button type="button" id="cancelCat">Hủy</button>
-                        <button type="submit" class="primary">Lưu</button>
-                    </div>
-                </form>
+    <!-- DELETE CONFIRM -->
+    <div class="overlay" id="delOverlay">
+        <div class="modal small">
+            <div class="modal-head">
+                <h3>⚠️ Xác nhận xóa</h3>
+                <button class="close-btn" id="closeDelBtn">✕</button>
             </div>
-        </div>
-
-        <!-- Quick Date Sheet -->
-        <div class="overlay" id="dateOverlay">
-            <div class="sheet">
-                <div class="sheet-header">
-                    <h3>📅 Cập nhật ngày</h3>
-                    <button id="closeDate">✕</button>
-                </div>
-                <p id="dateSub"></p>
-                <div class="date-grid">
-                    <button data-d="0">Hôm nay</button>
-                    <button data-d="1">Hôm qua</button>
-                    <button data-d="2">2 ngày</button>
-                    <button data-d="3">3 ngày</button>
-                    <button data-d="7">1 tuần</button>
-                    <button data-d="14">2 tuần</button>
-                </div>
-                <div class="custom-row">
-                    <input type="date" id="customDate">
-                    <button id="applyDate" class="primary">OK</button>
-                </div>
+            <div class="modal-body">
+                <p id="delMessage"></p>
             </div>
-        </div>
-
-        <!-- Delete Modal -->
-        <div class="overlay" id="delOverlay">
-            <div class="modal small">
-                <div class="modal-header">
-                    <h3>Xóa?</h3>
-                    <button id="closeDel">✕</button>
-                </div>
-                <p id="delMsg"></p>
-                <div class="modal-btns">
-                    <button id="cancelDel">Hủy</button>
-                    <button id="confirmDel" class="danger">Xóa</button>
-                </div>
+            <div class="modal-actions">
+                <button class="btn secondary" id="cancelDelBtn">Hủy</button>
+                <button class="btn danger" id="confirmDelBtn">🗑 Xóa</button>
             </div>
         </div>
     </div>
