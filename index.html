@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Reddit Sub Manager</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Mobile Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">📋</span>
+                    <h1>Reddit Subs</h1>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-icon-only" id="addSubBtn" title="Thêm Sub">➕</button>
+                    <button class="btn btn-icon-only" id="menuBtn" title="Menu">☰</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Category Tabs (Mobile Horizontal Scroll) -->
+        <div class="category-tabs" id="categoryTabs">
+            <!-- Categories rendered here -->
+        </div>
+
+        <!-- Search & Filter -->
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="🔍 Tìm subreddit...">
+            <select id="sortSelect">
+                <option value="lastPosted">Ngày đăng</option>
+                <option value="name">Tên A-Z</option>
+                <option value="subscribers">Subscribers</option>
+            </select>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-mini">
+            <span><strong id="totalSubs">0</strong> subs</span>
+            <span><strong id="selectedCount">0</strong> hiển thị</span>
+        </div>
+
+        <!-- Subreddit List -->
+        <div class="subreddit-list" id="subredditContainer">
+            <!-- Subreddits rendered here -->
+        </div>
+
+        <!-- Bottom Nav (Mobile) -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-view="all">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Tất cả</span>
+            </button>
+            <button class="nav-item" data-view="crypto">
+                <span class="nav-icon">💰</span>
+                <span class="nav-label">Crypto</span>
+            </button>
+            <button class="nav-item" data-view="karma">
+                <span class="nav-icon">⭐</span>
+                <span class="nav-label">Karma</span>
+            </button>
+            <button class="nav-item" data-view="add">
+                <span class="nav-icon">➕</span>
+                <span class="nav-label">Thêm</span>
+            </button>
+        </nav>
+
+        <!-- Side Menu -->
+        <div class="menu-overlay" id="menuOverlay">
+            <div class="side-menu" id="sideMenu">
+                <div class="menu-header">
+                    <h2>Menu</h2>
+                    <button class="btn-close" id="closeMenu">&times;</button>
+                </div>
+                <ul class="menu-list">
+                    <li onclick="openCategoryModal()">➕ Thêm Category</li>
+                    <li onclick="exportData()">📥 Export Markdown</li>
+                    <li onclick="resetData()">🔄 Reset Data</li>
+                </ul>
+                <div class="menu-categories">
+                    <h3>Categories</h3>
+                    <ul id="menuCategoryList"></ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add/Edit Subreddit Modal -->
+        <div class="modal-overlay" id="modalOverlay">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 id="modalTitle">Thêm Subreddit</h3>
+                    <button class="btn-close" id="closeModal">&times;</button>
+                </div>
+                <form id="subForm">
+                    <div class="form-group">
+                        <label>URL Subreddit *</label>
+                        <input type="url" id="subUrl" placeholder="https://reddit.com/r/..." required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Loại</label>
+                            <input type="text" id="subType" placeholder="Bitcoin, DeFi...">
+                        </div>
+                        <div class="form-group">
+                            <label>Subscribers</label>
+                            <input type="text" id="subSubscribers" placeholder="1M, 500k...">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Category *</label>
+                        <select id="subCategory" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>ChatGPT Link</label>
+                        <input type="url" id="subChatGPT" placeholder="https://chatgpt.com/c/...">
+                    </div>
+                    <div class="form-group">
+                        <label>Ngày đăng gần nhất</label>
+                        <div class="date-picker">
+                            <input type="date" id="subLastPosted">
+                            <div class="quick-dates">
+                                <button type="button" class="quick-date" data-days="0">Hôm nay</button>
+                                <button type="button" class="quick-date" data-days="1">Hôm qua</button>
+                                <button type="button" class="quick-date" data-days="2">2 ngày</button>
+                                <button type="button" class="quick-date" data-days="7">1 tuần</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Ghi chú / Rules</label>
+                        <textarea id="subNature" rows="2" placeholder="Strict, Not strict..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelBtn">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Category Modal -->
+        <div class="modal-overlay" id="categoryModalOverlay">
+            <div class="modal modal-small">
+                <div class="modal-header">
+                    <h3 id="categoryModalTitle">Thêm Category</h3>
+                    <button class="btn-close" id="closeCategoryModal">&times;</button>
+                </div>
+                <form id="categoryForm">
+                    <div class="form-group">
+                        <label>Tên Category *</label>
+                        <input type="text" id="categoryName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Màu</label>
+                        <input type="color" id="categoryColor" value="#6366f1">
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelCategoryBtn">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Quick Date Picker (Bottom Sheet) -->
+        <div class="bottom-sheet" id="quickDateSheet">
+            <div class="sheet-content">
+                <div class="sheet-header">
+                    <h3>Cập nhật ngày đăng</h3>
+                    <button class="btn-close" id="closeSheet">&times;</button>
+                </div>
+                <div class="sheet-body">
+                    <p id="sheetSubName">r/CryptoCurrency</p>
+                    <div class="quick-dates-grid">
+                        <button class="quick-date-btn" data-days="0">Hôm nay</button>
+                        <button class="quick-date-btn" data-days="1">Hôm qua</button>
+                        <button class="quick-date-btn" data-days="2">2 ngày trước</button>
+                        <button class="quick-date-btn" data-days="3">3 ngày trước</button>
+                        <button class="quick-date-btn" data-days="7">1 tuần trước</button>
+                        <button class="quick-date-btn" data-days="14">2 tuần trước</button>
+                    </div>
+                    <div class="custom-date">
+                        <input type="date" id="sheetCustomDate">
+                        <button class="btn btn-primary" id="applyCustomDate">Áp dụng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation -->
+        <div class="modal-overlay" id="deleteModalOverlay">
+            <div class="modal modal-small">
+                <div class="modal-header">
+                    <h3>Xác nhận xóa</h3>
+                    <button class="btn-close" id="closeDeleteModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p id="deleteMessage">Bạn có chắc muốn xóa?</p>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-secondary" id="cancelDeleteBtn">Hủy</button>
+                    <button class="btn btn-danger" id="confirmDeleteBtn">Xóa</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
